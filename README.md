@@ -11,10 +11,12 @@ This script uses the power of `faster-whisper` to generate a timestamped transcr
 | Icon | Feature | Description |
 | :--: | --------------------------- | ------------------------------------------------------------------------------------------------- |
 | `🚀` | **GPU-Accelerated Transcription** | Uses `faster-whisper` with CUDA (`float16`) for blazing-fast speech-to-text on NVIDIA GPUs. |
-| `🎯` | **Custom Keyword Detection** | Define your own list of hype/funny words (e.g., "laugh", "wow") to trigger a clip. |
-| `✂️` | **Automated Clipping** | Automatically exports video segments with configurable time buffers around each found keyword. |
+| `🎯` | **Custom Keyword Detection** | Define your own list of hype/funny words to trigger a clip. |
+| `🤝` | **Intelligent Moment Merging** | Automatically combines nearby keyword moments into a single, longer clip to avoid redundancy. |
+| `✂️` | **Automated Clipping** | Exports video segments with configurable time buffers and a minimum duration. |
 | `🧵` | **Parallel Exporting** | Leverages `ThreadPoolExecutor` to export multiple clips at the same time, saving you hours. |
 | `💻` | **Hardware Encoding** | Defaults to `h264_nvenc` for efficient video encoding on NVIDIA GPUs, offloading work from the CPU. |
+| `⚠️` | **Error Reporting** | Catches and reports any errors from `ffmpeg` during the export process. |
 
 ---
 
@@ -22,12 +24,13 @@ This script uses the power of `faster-whisper` to generate a timestamped transcr
 
 The script follows a simple pipeline to get from a full video to a folder of clips:
 
-`▶️ Video File` ➔ `🧠 faster-whisper` ➔ `📝 Transcript` ➔ `🔍 Keyword Scan` ➔ `🚀 Parallel Jobs` ➔ `🎬 FFMPEG Clips`
+`▶️ Video File` ➔ `🧠 faster-whisper` ➔ `📝 Transcript` ➔ `🔍 Keyword Scan` ➔ `🤝 Merge Moments` ➔ `🚀 Parallel Jobs` ➔ `🎬 FFMPEG Clips`
 
 1.  **Transcription**: `faster-whisper` processes the entire video and generates a highly accurate transcript with word-level timestamps.
 2.  **Keyword Scan**: The script reads the transcript and identifies every instance of your chosen keywords.
-3.  **Clipping**: For each keyword found, `ffmpeg` is used to export a clip. The duration and start/end time buffers are fully configurable.
-4.  **Parallel Processing**: Multiple `ffmpeg` jobs run in parallel to export clips simultaneously, dramatically speeding up the process.
+3.  **Moment Merging**: The script intelligently combines keyword timestamps that are close to each other, preventing dozens of short, overlapping clips.
+4.  **Clipping**: For each final moment, `ffmpeg` is used to export a clip. The duration and start/end time buffers are fully configurable.
+5.  **Parallel Processing**: Multiple `ffmpeg` jobs run in parallel to export clips simultaneously, dramatically speeding up the process.
 
 ---
 
@@ -91,7 +94,9 @@ max_workers = 6             # Number of clips to export in parallel. Adjust base
 buffer_before = 1.5         # Seconds to include before the keyword is spoken
 buffer_after = 3.0          # Seconds to include after the keyword is spoken
 min_duration = 60           # Minimum total duration for any clip (in seconds)
+merge_threshold = 10        # Max seconds between moments to merge them into one clip
 fps = "60"                  # Frame rate for the output clips
+video_codec = "h264_nvenc"  # FFMPEG video encoder. Use 'libx264' for CPU.
 ```
 
 ---
@@ -109,13 +114,12 @@ After the script finishes, you will find:
 
 > **😟 Getting FFMPEG or Encoder Errors?**
 >
-> The script defaults to using the NVIDIA `h264_nvenc` encoder for speed. If you don't have an NVIDIA GPU or get errors, you need to switch to a software encoder.
+> The script now has built-in error reporting for `ffmpeg`. If you see an error, the most common cause is an incompatible `video_codec`.
 >
-> 1.  Open `extract.py`.
-> 2.  Find the `export_clip` function.
-> 3.  Change the line `-c:v`, `"h264_nvenc"` to `-c:v`, `"libx264"`. This uses a high-quality CPU-based encoder that is much more compatible.
+> -   **For NVIDIA GPUs**: The default `h264_nvenc` is recommended.
+> -   **For AMD GPUs or CPU-only**: Change `video_codec` to `"libx264"` in the configuration. This is a high-quality software encoder that is universally compatible.
 
 > **🤔 CUDA / GPU Errors or Slow Performance?**
 >
 > -   If you don't have a compatible NVIDIA GPU, make sure to set `device = "cpu"` in the configuration.
-> -   When using the CPU, you should also change `compute_type = "float32"` or `compute_type = "int8"` for better performance.
+> -   When using the CPU, you should also change `compute_type` to `"float32"` or `"int8"` for better performance.
