@@ -1,126 +1,121 @@
 # 🎮 Vid Moment Extractor
 
-> A design blueprint for the project's README.
+Automatically find and clip hype moments from your videos using AI transcription.
+
+This script uses the power of `faster-whisper` to generate a timestamped transcript of your video, then automatically scans it for keywords you define (like "hahaha", "omg", or any inside joke). It then uses `ffmpeg` to rapidly export all those moments into individual clips, ready for sharing.
 
 ---
 
-### **Canvas Layout: Main Banner**
+## ✨ Core Features
 
-Imagine a dark-themed banner at the top of the page.
-
-* **Main Title (Large Font):**
-    `Vid Moment Extractor`
-* **Tagline (Smaller Font below Title):**
-    `Automatically find and clip hype moments from your videos using AI transcription.`
-* **Visual Graphic Idea:**
-    A stylized video timeline where keywords like `"hahaha"`, `"anjing"`, and `"goblok"` are highlighted, with scissor icons (✂️) automatically snipping those segments.
+| Icon | Feature | Description |
+| :--: | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| `🚀` | **GPU-Accelerated Transcription** | Uses `faster-whisper` with CUDA (`float16`) for blazing-fast speech-to-text on NVIDIA GPUs. |
+| `🎯` | **Custom Keyword Detection** | Define your own list of hype/funny words (e.g., "laugh", "wow") to trigger a clip. |
+| `✂️` | **Automated Clipping** | Automatically exports video segments with configurable time buffers around each found keyword. |
+| `🧵` | **Parallel Exporting** | Leverages `ThreadPoolExecutor` to export multiple clips at the same time, saving you hours. |
+| `💻` | **Hardware Encoding** | Defaults to `h264_nvenc` for efficient video encoding on NVIDIA GPUs, offloading work from the CPU. |
 
 ---
 
-### **How It Works: The Process Flow**
+## ⚙️ How It Works
 
-This section visually explains the script's pipeline from start to finish.
+The script follows a simple pipeline to get from a full video to a folder of clips:
 
 `▶️ Video File` ➔ `🧠 faster-whisper` ➔ `📝 Transcript` ➔ `🔍 Keyword Scan` ➔ `🚀 Parallel Jobs` ➔ `🎬 FFMPEG Clips`
 
-* **`faster-whisper`**: Transcribes the video using your chosen model (`medium`, `small`, etc.).
-* **`Keyword Scan`**: The script reads the transcript and finds timestamps for all your keywords.
-* **`Parallel Jobs`**: Uses `ThreadPoolExecutor` to launch multiple `ffmpeg` processes at once.
-* **`FFMPEG Clips`**: Encodes the final clips using hardware acceleration (`h264_nvenc`) for speed.
+1.  **Transcription**: `faster-whisper` processes the entire video and generates a highly accurate transcript with word-level timestamps.
+2.  **Keyword Scan**: The script reads the transcript and identifies every instance of your chosen keywords.
+3.  **Clipping**: For each keyword found, `ffmpeg` is used to export a clip. The duration and start/end time buffers are fully configurable.
+4.  **Parallel Processing**: Multiple `ffmpeg` jobs run in parallel to export clips simultaneously, dramatically speeding up the process.
 
 ---
 
-### **✨ Core Features (Icon Grid)**
+## 🚀 Getting Started
 
-Arrange these as five distinct visual blocks with icons.
+### 1. Prerequisites
 
-| Icon | Feature                     | Description                                                                                       |
-| :--: | --------------------------- | ------------------------------------------------------------------------------------------------- |
-| `🚀` | **GPU-Accelerated Transcription** | Uses `faster-whisper` with CUDA (`float16`) for blazing-fast speech-to-text on NVIDIA GPUs. |
-| `🎯` | **Custom Keyword Detection** | Define your own list of hype/funny words (e.g., "laugh", "gendut") to trigger a clip.         |
-| `✂️` | **Automated Clipping** | Automatically exports video segments with configurable time buffers around each found keyword.    |
-| `🧵` | **Parallel Exporting** | Leverages `ThreadPoolExecutor` to export multiple clips at the same time, saving you hours.     |
-| `💻` | **Hardware Encoding** | Defaults to `h264_nvenc` for efficient video encoding, offloading work from the CPU.            |
+-   **Python 3.8+**
+-   **FFmpeg**: You must have `ffmpeg` installed and accessible in your system's PATH. You can download it from [ffmpeg.org](https://ffmpeg.org/download.html).
 
----
+### 2. Installation
 
-### **🛠️ Configuration Panel (Visual Mockup)**
+Clone this repository and install the required Python package:
 
-Imagine this section as a settings panel from an application.
+```bash
+pip install faster-whisper
+```
 
-> #### **`extract.py` Settings**
->
-> **File Paths**
->
-> `video_path`: [ `your_video.mkv` ]
->
-> `clip_output_dir`: [ `clips/` ]
->
-> ---
->
-> **AI & Performance**
->
-> `model_size`: [ `medium` ▼] (`small`, `large-v2`)
->
-> `device`: [ `cuda` ▼] (`cpu`)
->
-> `max_workers`: [ `6` ]
->
-> ---
->
-> **Clip Timing**
->
-> `min_duration`: [ `60` ]s
->
-> `buffer_before`: [ `1.5` ]s
->
-> `buffer_after`: [ `3.0` ]s
+### 3. Configuration
+
+Open `extract.py` in a text editor. All the settings you need to change are in the `CONFIG` section at the top of the file.
+
+See the **Configuration** section below for a detailed explanation of each option.
+
+### 4. Run the Script
+
+Once configured, run the script from your terminal:
+
+```bash
+python extract.py
+```
+
+The script will print its progress as it transcribes the video and exports the clips.
 
 ---
 
-### **🚀 Get Started in 3 Steps**
+## 🛠️ Configuration
 
-A clean, numbered guide for new users.
+All settings are located in the `CONFIG` section at the top of `extract.py`.
 
-1.  **Install Dependencies**
-    * Make sure `ffmpeg` is installed and in your system's PATH.
-    * Install Python packages:
-        ```bash
-        pip install faster-whisper
-        ```
+```python
+# ----------------- CONFIG -----------------
+video_path = "your_video.mkv"  # <-- Path to your video file
+output_transcript = "transcript.txt" # <-- Name for the output transcript file
+clip_output_dir = "clips"      # <-- Folder to save the final clips
 
-2.  **Configure The Script**
-    * Open `extract.py`.
-    * Set your `video_path` to the correct file.
-    * Customize your `keywords` list.
+# Keywords to search for in the transcript. Case-insensitive.
+keywords = [
+    "lol", "laugh", "anjing", "anying", "goblog", "kontol",
+    "memek", "hahaha", "screamed", "goblok", "aduh", "ardi",
+    "beni", "gendut", "botak"
+]
 
-3.  **Run It!**
-    * Execute the script from your terminal:
-        ```bash
-        python extract.py
-        ```
+# --- AI & Performance Settings ---
+model_size = "medium"       # Whisper model size ('tiny', 'base', 'small', 'medium', 'large-v3')
+device = "cuda"             # 'cuda' for GPU (NVIDIA), 'cpu' for CPU
+compute_type = "float16"    # 'float16' for faster GPU processing, 'int8' or 'float32' for CPU
+max_workers = 6             # Number of clips to export in parallel. Adjust based on your CPU cores.
 
----
-
-### **📦 Output Preview**
-
-A simple visual representation of what the user will get.
-
-* 📄 **`transcript.txt`** (Full, timestamped transcript)
-* 📁 **`clips/`**
-    * `clip_1.mkv`
-    * `clip_2.mkv`
-    * `clip_3.mkv`
-    * ...etc
+# --- Clip Timing & Quality Settings ---
+buffer_before = 1.5         # Seconds to include before the keyword is spoken
+buffer_after = 3.0          # Seconds to include after the keyword is spoken
+min_duration = 60           # Minimum total duration for any clip (in seconds)
+fps = "60"                  # Frame rate for the output clips
+```
 
 ---
 
-### **💡 Pro-Tips & Troubleshooting**
+## 📦 Output
 
-> **💡 Not using an NVIDIA GPU?**
->
-> The script defaults to `h264_nvenc`. If you get an FFMPEG error, open `extract.py` and find the `export_clip` function. Change `-c:v`, `"h264_nvenc"` to `-c:v`, `"libx264"` to use a more compatible software encoder.
+After the script finishes, you will find:
 
-> **😟 Getting CUDA or GPU errors?**
+-   📄 **`transcript.txt`**: The full, timestamped transcript of your video.
+-   📁 **`clips/`**: A folder containing all the extracted highlight clips, named `clip_1.mkv`, `clip_2.mkv`, etc.
+
+---
+
+## 💡 Troubleshooting & Tips
+
+> **😟 Getting FFMPEG or Encoder Errors?**
 >
-> Make sure to set `device = "cpu"` and `compute_type = "float32"` in the configuration section at the top of the script.
+> The script defaults to using the NVIDIA `h264_nvenc` encoder for speed. If you don't have an NVIDIA GPU or get errors, you need to switch to a software encoder.
+>
+> 1.  Open `extract.py`.
+> 2.  Find the `export_clip` function.
+> 3.  Change the line `-c:v`, `"h264_nvenc"` to `-c:v`, `"libx264"`. This uses a high-quality CPU-based encoder that is much more compatible.
+
+> **🤔 CUDA / GPU Errors or Slow Performance?**
+>
+> -   If you don't have a compatible NVIDIA GPU, make sure to set `device = "cpu"` in the configuration.
+> -   When using the CPU, you should also change `compute_type = "float32"` or `compute_type = "int8"` for better performance.
