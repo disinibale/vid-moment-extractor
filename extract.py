@@ -1,4 +1,4 @@
-'''import os
+import os
 import subprocess
 import time
 from typing import List, Tuple
@@ -84,18 +84,16 @@ highlight_times: List[Tuple[float, float]] = []
 with open(output_transcript, "w", encoding="utf-8") as f:
     for i, segment in enumerate(segments):
         start, end, text = segment.start, segment.end, segment.text
-        f.write(f"[{start:.2f}s -> {end:.2f}s] {text}
-")
+        f.write(f"[{start:.2f}s -> {end:.2f}s] {text}\n")
 
         # Simple progress bar
         percent_done = (end / info.duration) * 100
-        print(f"⌛ Progress: {percent_done:.2f}%", end="")
+        print(f"⌛ Progress: {percent_done:.2f}%", end="\r")
 
         if any(kw in text.lower() for kw in keywords):
             highlight_times.append((start, end))
 
-print(f"
-🎉 Found {len(highlight_times)} raw keyword moments.")
+print(f"\n🎉 Found {len(highlight_times)} raw keyword moments.")
 
 
 # ----------------- MERGE MOMENTS -----------------
@@ -164,8 +162,7 @@ def export_clip(i: int, start: float, end: float):
     except subprocess.CalledProcessError as e:
         print(f"❌ ERROR exporting {clip_name}: FFMPEG failed.")
         print(f"    Command: {' '.join(command)}")
-        print(f"    FFMPEG stderr:
-{e.stderr}")
+        print(f"    FFMPEG stderr:\n{e.stderr}")
 
 
 clip_start_time = time.time()
@@ -185,4 +182,3 @@ total_end = time.time()
 print(
     f"🔥 TOTAL RUNTIME: {(total_end - total_start):.2f}s ({(total_end - total_start)/60:.2f} mins)"
 )
-''
